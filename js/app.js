@@ -1,4 +1,4 @@
-// app.js — Cuspir com markdown, export, import, criptografia
+// app.js — Epifania com markdown, export, import, criptografia
 (() => {
   const $ = (s) => document.querySelector(s);
   const els = {
@@ -341,13 +341,13 @@
   }
   function exportAllJson(){
     const json=Storage.exportJson(notes);
-    downloadFile(`cuspir-backup-${new Date().toISOString().slice(0,10)}.json`, json, "application/json");
+    downloadFile(`epifania-backup-${new Date().toISOString().slice(0,10)}.json`, json, "application/json");
     showToast("backup JSON exportado");
   }
   function exportAllMd(){
     if(!notes.length){ showToast("nada para exportar"); return; }
     const all = notes.map(n=> `# ${n.title || "sem título"}\n\n${n.content}\n\n---\n_criada: ${formatFullDate(n.createdAt)}_\n_editada: ${formatFullDate(n.updatedAt)}_\n`).join("\n\n");
-    downloadFile(`cuspir-todas-${new Date().toISOString().slice(0,10)}.md`, all, "text/markdown");
+    downloadFile(`epifania-todas-${new Date().toISOString().slice(0,10)}.md`, all, "text/markdown");
     showToast("todas as notas em .md");
   }
   function exportAllPdf(){
@@ -359,10 +359,10 @@
       const md=Markdown.toHtml(n.content);
       return `<article style="margin-bottom:40px; padding-bottom:30px; border-bottom:1px solid #e7e5e4"><h1>${title}</h1><div style="font-size:12px;color:#a8a29e;margin-bottom:12px">criada ${formatFullDate(n.createdAt)} • editada ${formatFullDate(n.updatedAt)}</div><div>${md}</div></article>`;
     }).join("");
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Cuspir — todas as notas</title><style>
+    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Epifania — todas as notas</title><style>
       body{font-family:ui-sans-system,-apple-system,BlinkMacSystemFont,Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif; max-width:740px; margin:40px auto; padding:0 20px; color:#1c1917; line-height:1.6}
       h1{font-size:22px} pre{background:#0a0a0a;color:#fafaf9;padding:14px;border-radius:10px;overflow:auto} code{font-family:ui-monospace,monospace;background:#f5f5f4;padding:2px 6px;border-radius:6px} pre code{background:transparent;color:inherit} blockquote{border-left:3px solid #d6d3d1;margin:12px 0;padding:6px 14px;background:#f5f5f4}
-    </style></head><body><h1 style="text-align:center">cuspir — todas as notas</h1><p style="text-align:center;color:#a8a29e;font-size:12px">${notes.length} notas • ${new Date().toLocaleDateString("pt-BR")}</p>${body}</body></html>`);
+    </style></head><body><h1 style="text-align:center">epifania — todas as notas</h1><p style="text-align:center;color:#a8a29e;font-size:12px">${notes.length} notas • ${new Date().toLocaleDateString("pt-BR")}</p>${body}</body></html>`);
     win.document.close(); win.focus(); setTimeout(()=>win.print(),500);
   }
 

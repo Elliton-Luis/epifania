@@ -1,7 +1,7 @@
 {
-  "name": "Cuspir — Pensou? Cuspa.",
-  "short_name": "Cuspir",
-  "description": "Um caderno digital para despejar pensamentos sem fricção.",
+  "name": "Epifania — teve uma ideia? Anote.",
+  "short_name": "Epifania",
+  "description": "Um caderno digital minimalista para capturar epifanias sem fricção.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

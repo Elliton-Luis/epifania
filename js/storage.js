@@ -1,13 +1,20 @@
 // storage.js — camada fina sobre localStorage com suporte opcional a criptografia
 const Storage = (() => {
-  const KEY = "cuspir:notes";
-  const ENC_KEY = "cuspir:enc:v1";
-  const LEGACY_KEY = "cuspir";
+  const KEY = "epifania:notes";
+  const ENC_KEY = "epifania:enc:v1";
+  const LEGACY_KEY = "epifania";
+  const LEGACY_CUSPIR_KEY = "cuspir:notes";
+  const LEGACY_CUSPIR_ENC = "cuspir:enc:v1";
 
   function loadPlain() {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) return JSON.parse(raw);
+      // migração de Cuspir -> Epifania
+      const old = localStorage.getItem(LEGACY_CUSPIR_KEY);
+      if (old) {
+        try { const arr = JSON.parse(old); if (Array.isArray(arr)) { localStorage.setItem(KEY, old); return arr; } } catch {}
+      }
       const legacy = localStorage.getItem(LEGACY_KEY);
       if (legacy) {
         const parsed = JSON.parse(legacy);
@@ -49,8 +56,13 @@ const Storage = (() => {
   function clearAll() {
     localStorage.removeItem(KEY);
     localStorage.removeItem(ENC_KEY);
-    localStorage.removeItem("cuspir:enc:meta");
+    localStorage.removeItem("epifania:enc:meta");
     localStorage.removeItem(LEGACY_KEY);
+    // limpa chaves legadas do Cuspir
+    localStorage.removeItem(LEGACY_CUSPIR_KEY);
+    localStorage.removeItem(LEGACY_CUSPIR_ENC);
+    localStorage.removeItem("cuspir:enc:meta");
+    localStorage.removeItem("cuspir");
   }
 
   return { load, loadPlain, save, savePlain, generateId, exportJson, clearAll, KEY, ENC_KEY };

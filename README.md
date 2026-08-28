@@ -1,95 +1,85 @@
-# Cuspir — Pensou? Cuspa.
+# Epifania — teve uma ideia? Anote.
 
-Um caderno digital minimalista para despejar pensamentos sem fricção. Inspirado na experiência de notas do Cátedra, mas com identidade própria: **abrir, cuspir uma ideia, salvar e seguir a vida.**
+Um caderno digital minimalista, legível e sem fricção para capturar epifanias. Inspirado no Cuspir/Cátedra, mas com identidade própria: **abrir, anotar, seguir.**
 
-> Não é um Notion. Não é um Obsidian. É só um lugar para cuspir.
+> Não é um Notion. Não é um Obsidian. É um lugar limpo para pensar.
 
 ## Proposta
 
-O Cuspir prioriza **velocidade, simplicidade e organização suficiente**. Nada de dashboards, gamificação ou menus complexos. O foco é **escrever → salvar → encontrar**.
+Epifania prioriza **clareza, velocidade e organização suficiente**. Sem dashboards, gamificação ou menus complexos. O foco é **escrever → salvar → encontrar**.
 
-- Criação instantânea de notas
-- Edição com autosave (debounce ~500ms)
-- Busca instantânea por título e conteúdo
-- Organização por atualização recente
-- Leitura em markdown e prévia renderizada
-- Funciona offline e é instalável como PWA
-- Criptografia client-side opcional
+- Criação instantânea
+- Autosave com debounce (~500 ms)
+- Busca instantânea
+- Leitura em markdown
+- Offline e instalável como PWA
 
 ## Funcionalidades
 
 - [x] Criar, editar e excluir notas
-- [x] Título + conteúdo com **suporte a markdown** (headings, negrito, itálico, listas, código, links, citações)
+- [x] Título + conteúdo com **markdown** (headings, negrito, itálico, listas, código, links, citações)
 - [x] Abas **escrever / prévia** com renderização instantânea
-- [x] Autosave com debounce 500ms (persiste mesmo ao recarregar)
-- [x] Busca instantânea por título e conteúdo (sem reload)
+- [x] Autosave com debounce (persiste ao recarregar)
+- [x] Busca instantânea por título e conteúdo
 - [x] Ordenação por atualização (recentes/antigas)
-- [x] Timestamps de criação e última edição + contador de palavras
-- [x] Exportar nota em **.md** e **PDF** (via impressão)
-- [x] Exportar todas as notas em **.md** e **PDF**
-- [x] **Importar** JSON (backup) e .md (arraste ou seletor)
-- [x] **Exportar** backup JSON completo
-- [x] **Apagar todos os dados** do app
-- [x] **Criptografia client-side** AES-GCM 256 com PBKDF2 (senha nunca sai do dispositivo)
-- [x] Tela de bloqueio, troca de senha e bloqueio manual
-- [x] Persistência em `localStorage` (ou cifrado)
-- [x] Layout mobile-first responsivo (lista ↔ editor)
-- [x] PWA: manifest, service worker, cache offline, instalável
-- [x] Atalhos: `Ctrl/Cmd + N` nova nota, `Esc` voltar (mobile)
+- [x] Timestamps + contador de palavras/caracteres
+- [x] Exportar nota em **.md** e **PDF**
+- [x] Exportar todas em **.md** e **PDF**
+- [x] **Importar** JSON e .md (arraste ou seletor)
+- [x] **Exportar** backup JSON
+- [x] **Apagar todos os dados**
+- [x] **Criptografia client-side** AES-GCM 256 + PBKDF2
+- [x] Tela de bloqueio e troca de senha
+- [x] `localStorage` (ou cifrado)
+- [x] Mobile-first, legível e minimalista
+- [x] PWA instalável e offline
+- [x] Atalhos: `Ctrl/Cmd + N` nova nota, `Esc` voltar
 
 ## Tecnologias
 
 - HTML
-- CSS (vanilla, mobile-first)
+- CSS (vanilla, mobile-first, tipografia legível)
 - JavaScript vanilla
-- `localStorage` para persistência
-- Web Crypto API (AES-GCM + PBKDF2) para criptografia
-- PWA: Web App Manifest + Service Worker
+- `localStorage`
+- Web Crypto API (AES-GCM + PBKDF2)
+- PWA: Manifest + Service Worker
 
-Sem frameworks, sem dependências externas.
+Sem frameworks, sem dependências.
 
-## Como executar localmente
-
-Opção 1 — abrir direto:
+## Como executar
 
 ```bash
-# clone e abra index.html no navegador
+# abrir direto
 open index.html
-```
 
-Opção 2 — servidor estático (recomendado para PWA/service worker):
-
-```bash
+# recomendado para PWA
 python3 -m http.server 8000
-# depois abra http://localhost:8000
-
-# ou npx
-npx serve .
+# http://localhost:8000
 ```
 
-> Service workers exigem `http://localhost` ou HTTPS. Abrir via `file://` não ativa o PWA.
+> Service Worker exige `http://localhost` ou HTTPS.
 
 ## Como instalar como PWA
 
-1. Rode em um servidor local ou hospede como site estático (GitHub Pages, Netlify, Vercel, etc).
-2. Abra no Chrome/Edge/Firefox/Safari.
-3. Procure por **Instalar** na barra de endereço ou menu (⋮ → Instalar app / Adicionar à tela inicial).
-4. O app abrirá em `display: standalone` e continuará funcionando offline.
+1. Rode local ou hospede como site estático.
+2. Abra no navegador.
+3. Clique em **Instalar** na barra de endereço ou ⋮ → *Instalar app*.
+4. Abre em `display: standalone` e funciona offline.
 
-## Estrutura do projeto
+## Estrutura
 
 ```
-cuspir/
+epifania/
 ├── index.html
 ├── manifest.json
 ├── sw.js
 ├── css/
 │   └── style.css
 ├── js/
-│   ├── storage.js   # camada fina sobre localStorage
+│   ├── storage.js   # localStorage + migração cuspir → epifania
 │   ├── markdown.js  # parser markdown vanilla
-│   ├── crypto.js    # AES-GCM + PBKDF2 client-side
-│   └── app.js       # CRUD, busca, debounce, render, export, crypto UI
+│   ├── crypto.js    # AES-GCM + PBKDF2 (com alias CuspirCrypto)
+│   └── app.js       # CRUD, busca, render, export, crypto
 └── assets/
     └── icons/
         ├── icon.svg
@@ -97,59 +87,59 @@ cuspir/
         └── icon-512.png
 ```
 
-## Onde os dados são armazenados
+## Onde os dados ficam
 
-- Sem criptografia: chave `cuspir:notes` → `JSON.stringify(Note[])`
-- Com criptografia: chave `cuspir:enc:v1` → `{ salt, iv, ct, v }` (base64) cifrado com senha; `cuspir:enc:meta` guarda metadado
+- Sem criptografia: `epifania:notes` → `JSON.stringify(Note[])`
+- Com criptografia: `epifania:enc:v1` → `{ salt, iv, ct, v }` base64; `epifania:enc:meta`
+- Migração automática de `cuspir:notes` / `cuspir:enc:v1` se existirem
 - Cada nota: `{ id, title, content, createdAt, updatedAt }`
 - `id` via `crypto.randomUUID()` com fallback
-- Sem backend — tudo no dispositivo. Limpar dados do site apaga as notas (ou use o botão “apagar tudo” no menu)
-
-Estrutura interna:
+- Sem backend — tudo no dispositivo
 
 ```
 localStorage
-├── cuspir:notes        # quando sem criptografia
-└── cuspir:enc:v1       # quando com criptografia (AES-GCM)
-    └── cuspir:enc:meta
+├── epifania:notes      # plano
+└── epifania:enc:v1     # cifrado
+    └── epifania:enc:meta
 ```
 
 ## Criptografia
 
-- Algoritmo: AES-GCM 256, chave derivada via PBKDF2-SHA256 (120k iterações, salt 16 bytes, iv 12 bytes)
-- 100% client-side, sem envio a servidor
-- Senha mantida apenas em memória enquanto desbloqueado; ao bloquear/fechar, precisa digitar de novo
-- Se esquecer a senha, **não há recuperação**: única saída é apagar tudo (botão na tela de bloqueio)
-- Ative em ⋮ → criptografia; desative informando a senha atual; troque a senha pelo mesmo fluxo
+- AES-GCM 256, chave derivada PBKDF2-SHA256 (120k iterações, salt 16B, iv 12B)
+- 100% local, senha só em memória
+- Esqueceu a senha → sem recuperação, só *apagar tudo*
+- Ative em ⋮ → criptografia
 
 ## Import / Export
 
-- **Exportar JSON**: ⋮ → exportar JSON (backup completo com `version` e `exportedAt`)
-- **Importar**: ⋮ → importar arquivo ou arraste .json/.md sobre a janela; JSON mescla com existentes (ids duplicados geram novos)
-- **Exportar .md (nota)**: no editor → botão “.md”
-- **Exportar PDF (nota)**: no editor → botão “PDF” (abre janela de impressão)
-- **Exportar todas .md / PDF**: na sidebar, rodapé da lista
+- **Exportar JSON**: ⋮ → exportar JSON
+- **Importar**: ⋮ → importar arquivo ou arraste .json/.md
+- **Exportar .md / PDF (nota)**: no editor → `.md` / `PDF`
+- **Exportar todas**: rodapé da lista → `.md` / `PDF`
 
-## Markdown suportado
+## Markdown
 
-Headings `# ## ###`, **negrito**, *itálico*, `inline code`, ```blocos```, listas `-`/`*`/`1.`, links `[texto](url)`, autolinks, `> citação`, `---` hr, ~~riscado~~.
+`# ## ###`, **negrito**, *itálico*, `código`, ```bloco```, `- lista`, `1. lista`, `[link](url)`, `> citação`, `---`, `~~riscado~~`.
+
+## Design
+
+Minimalista, tipografia confortável, contraste suave, foco no texto. Mobile-first: lista confortável, editor ocupa a tela, botões com área de toque adequada. Desktop: lista lateral + editor centralizado (máx. 740px).
 
 ## Limitações
 
-- Sem sincronização entre dispositivos.
-- Sem categorias/tags (pode ser adicionado sem sacrificar velocidade).
-- Limite de ~5–10 MB por origem (depende do navegador).
-- PDF é gerado via janela de impressão do navegador (sem libs externas).
+- Sem sincronização entre dispositivos
+- Sem categorias/tags
+- Limite ~5–10 MB por origem
+- PDF via impressão do navegador
 
 ## Screenshots
 
-<!-- Adicione aqui quando disponíveis -->
-<!-- ![Lista de notas](docs/screenshot-list.png) -->
+<!-- ![Lista](docs/screenshot-list.png) -->
 <!-- ![Editor](docs/screenshot-editor.png) -->
 <!-- ![Mobile](docs/screenshot-mobile.png) -->
 
 ## Desenvolvimento
 
-Princípios: **SOLID, KISS, YAGNI** com bom senso — sem abstrações desnecessárias.
+Princípios SOLID, KISS, YAGNI com bom senso — sem abstrações desnecessárias.
 
-Fluxo ideal: abrir → nova nota → escrever em markdown → autosave → prévia → exportar ou encontrar via busca.
+Fluxo ideal: abrir → nova epifania → escrever em markdown → prévia → salvo sozinho → encontrar pela busca.

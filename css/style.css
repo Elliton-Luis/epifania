@@ -1,23 +1,23 @@
-/* Cuspir — minimal, text-first, mobile-first */
+/* Epifania — minimal, text-first, mobile-first */
 :root{
-  --bg:#fafaf9;
+  --bg:#fdfcfa;
   --surface:#ffffff;
-  --surface-2:#f5f5f4;
-  --border:#e7e5e4;
-  --border-strong:#d6d3d1;
-  --text:#1c1917;
-  --text-2:#57534e;
-  --text-3:#a8a29e;
-  --accent:#0a0a0a;
-  --accent-fg:#fafaf9;
+  --surface-2:#f6f5f3;
+  --border:#eceae6;
+  --border-strong:#ddd9d2;
+  --text:#1a1a18;
+  --text-2:#5a5754;
+  --text-3:#9a9590;
+  --accent:#111110;
+  --accent-fg:#fdfcfa;
   --danger:#dc2626;
-  --radius:14px;
-  --radius-sm:10px;
+  --radius:16px;
+  --radius-sm:12px;
   --max-w:1280px;
-  --sidebar-w:380px;
+  --sidebar-w:360px;
   --header-h:56px;
   --font: ui-sans-system, -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Cascadia Code", monospace;
 }
 
 *{box-sizing:border-box}
@@ -28,7 +28,8 @@ body{
   font-family:var(--font);
   background:var(--bg);
   color:var(--text);
-  line-height:1.5;
+  line-height:1.6;
+  letter-spacing:-0.01em;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
 }
@@ -239,7 +240,7 @@ body{
 .note-content-input{
   flex:1; width:100%; min-height:320px;
   border:none; outline:none; resize:none;
-  font-size:16px; line-height:1.7; color:var(--text);
+  font-size:16px; line-height:1.85; color:var(--text);
   background:transparent; padding:8px 0;
   font-family:var(--font);
 }
@@ -250,7 +251,7 @@ body{
 
 .md-preview{
   flex:1; min-height:320px; padding:8px 0;
-  font-size:15px; line-height:1.7; color:var(--text);
+  font-size:15.5px; line-height:1.85; color:var(--text);
 }
 .md-preview h1{font-size:22px; font-weight:800; margin:18px 0 10px; letter-spacing:-0.02em}
 .md-preview h2{font-size:19px; font-weight:700; margin:16px 0 8px}

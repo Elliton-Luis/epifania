@@ -1,8 +1,10 @@
 // crypto.js — criptografia client-side com Web Crypto API
 // AES-GCM + PBKDF2, tudo 100% local, sem envio a servidor
-const CuspirCrypto = (() => {
-  const ENC_KEY = "cuspir:enc:v1";
-  const ENC_META = "cuspir:enc:meta";
+const EpifaniaCrypto = (() => {
+  const ENC_KEY = "epifania:enc:v1";
+  const ENC_META = "epifania:enc:meta";
+  const LEGACY_ENC_KEY = "cuspir:enc:v1";
+  const LEGACY_META = "cuspir:enc:meta";
   const SALT_LEN = 16;
   const IV_LEN = 12;
   const ITERATIONS = 120000;
@@ -66,11 +68,14 @@ const CuspirCrypto = (() => {
   }
 
   function isEncrypted() {
-    return !!localStorage.getItem(ENC_KEY);
+    if (localStorage.getItem(ENC_KEY)) return true;
+    // migração legada: se só existe chave antiga, considera criptografado e migra sob demanda
+    if (localStorage.getItem(LEGACY_ENC_KEY)) return true;
+    return false;
   }
 
   function getMeta() {
-    try { return JSON.parse(localStorage.getItem(ENC_META) || "null"); } catch { return null; }
+    try { return JSON.parse(localStorage.getItem(ENC_META) || localStorage.getItem(LEGACY_META) || "null"); } catch { return null; }
   }
   function setMeta(obj) {
     localStorage.setItem(ENC_META, JSON.stringify(obj));
@@ -80,40 +85,57 @@ const CuspirCrypto = (() => {
     const json = JSON.stringify(notes);
     const blob = await encrypt(json, password);
     localStorage.setItem(ENC_KEY, JSON.stringify(blob));
-    // remove plain
+    // remove plain (novo e legado)
+    localStorage.removeItem("epifania:notes");
     localStorage.removeItem("cuspir:notes");
+    localStorage.removeItem(LEGACY_ENC_KEY);
+    localStorage.removeItem(LEGACY_META);
     setMeta({ enabledAt: new Date().toISOString() });
   }
 
   async function disableEncryption(notes, password) {
     // if currently encrypted, verify password first by decrypting
     if (isEncrypted()) {
-      const blob = JSON.parse(localStorage.getItem(ENC_KEY));
+      const raw = localStorage.getItem(ENC_KEY) || localStorage.getItem(LEGACY_ENC_KEY);
+      const blob = JSON.parse(raw);
       await decrypt(blob, password); // throws if wrong
     }
     localStorage.removeItem(ENC_KEY);
     localStorage.removeItem(ENC_META);
-    localStorage.setItem("cuspir:notes", JSON.stringify(notes));
+    localStorage.removeItem(LEGACY_ENC_KEY);
+    localStorage.removeItem(LEGACY_META);
+    localStorage.setItem("epifania:notes", JSON.stringify(notes));
   }
 
   async function persistEncrypted(notes, password) {
     const json = JSON.stringify(notes);
     const blob = await encrypt(json, password);
     localStorage.setItem(ENC_KEY, JSON.stringify(blob));
+    // limpa legado se existir
+    localStorage.removeItem(LEGACY_ENC_KEY);
   }
 
   async function loadEncrypted(password) {
-    const raw = localStorage.getItem(ENC_KEY);
+    const raw = localStorage.getItem(ENC_KEY) || localStorage.getItem(LEGACY_ENC_KEY);
     if (!raw) return null;
     const blob = JSON.parse(raw);
     const json = await decrypt(blob, password);
-    return JSON.parse(json);
+    const data = JSON.parse(json);
+    // migra legado para nova chave se necessário
+    if (localStorage.getItem(LEGACY_ENC_KEY) && !localStorage.getItem(ENC_KEY)) {
+      localStorage.setItem(ENC_KEY, raw);
+    }
+    return data;
   }
 
   function clearEncrypted() {
     localStorage.removeItem(ENC_KEY);
     localStorage.removeItem(ENC_META);
+    localStorage.removeItem(LEGACY_ENC_KEY);
+    localStorage.removeItem(LEGACY_META);
   }
 
   return { encrypt, decrypt, isEncrypted, getMeta, enableEncryption, disableEncryption, persistEncrypted, loadEncrypted, clearEncrypted, ENC_KEY, ENC_META };
 })();
+// compat alias
+const CuspirCrypto = EpifaniaCrypto;

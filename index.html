@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0a0a0a" />
-  <meta name="description" content="Cuspir — Pensou? Cuspa. Um caderno digital para despejar pensamentos sem fricção." />
-  <title>Cuspir — Pensou? Cuspa.</title>
+  <meta name="description" content="Epifania — teve uma ideia? Anote. Um caderno digital minimalista para pensamentos sem fricção." />
+  <title>Epifania — teve uma ideia? Anote.</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
@@ -15,8 +15,8 @@
   <!-- Lock screen (shown when encrypted & locked) -->
   <div id="lock-screen" class="lock-screen hidden">
     <div class="lock-card">
-      <div class="lock-icon">◉</div>
-      <h2>cuspir está bloqueado</h2>
+      <div class="lock-icon">✦</div>
+      <h2>epifania bloqueada</h2>
       <p>suas notas estão criptografadas neste dispositivo.</p>
       <form id="unlock-form" class="lock-form">
         <input id="unlock-input" type="password" placeholder="senha…" autocomplete="current-password" required />
@@ -32,9 +32,9 @@
   <div id="app">
     <header class="app-header">
       <div class="brand">
-        <span class="brand-mark">◉</span>
-        <h1 class="brand-name">cuspir</h1>
-        <span class="brand-tag">pensou? cuspa.</span>
+        <span class="brand-mark">✦</span>
+        <h1 class="brand-name">epifania</h1>
+        <span class="brand-tag">teve uma ideia? anote.</span>
         <span id="crypto-badge" class="crypto-badge hidden" title="criptografia ativa">🔒</span>
       </div>
       <div class="header-actions">
@@ -73,7 +73,7 @@
         <div id="notes-list" class="notes-list" aria-label="Lista de notas"></div>
         <div id="empty-list" class="empty-state hidden">
           <p class="empty-title">nada por aqui ainda</p>
-          <p class="empty-desc">toque em <strong>nova</strong> e cuspa a primeira ideia.</p>
+          <p class="empty-desc">toque em <strong>nova</strong> e registre sua primeira epifania.</p>
         </div>
 
         <div class="sidebar-footer">
@@ -115,7 +115,7 @@
               <span id="note-dates"></span>
               <span id="note-stats"></span>
             </div>
-            <textarea id="note-content" class="note-content-input" placeholder="cuspa aqui… (markdown suportado)
+            <textarea id="note-content" class="note-content-input" placeholder="anote aqui… (markdown suportado)
 
 # título
 **negrito** *itálico* `código`

@@ -1,4 +1,4 @@
-const CACHE_NAME = "cuspir-v2";
+const CACHE_NAME = "epifania-v1";
 const ASSETS = [
   "./",
   "./index.html",
