@@ -1,4 +1,4 @@
-const CACHE_NAME = "epifania-v1";
+const CACHE_NAME = "epifania-vintage-v3";
 const ASSETS = [
   "./",
   "./index.html",
