@@ -22,6 +22,7 @@ Epifania prioriza **clareza, velocidade e organização suficiente**. Sem dashbo
 - [x] Autosave com debounce (persiste ao recarregar)
 - [x] Busca instantânea por título e conteúdo
 - [x] Ordenação por atualização (recentes/antigas)
+- [x] Paginação (8 notas por página) com navegação minimalista
 - [x] Timestamps + contador de palavras/caracteres
 - [x] Exportar nota em **.md** e **PDF**
 - [x] Exportar todas em **.md** e **PDF**
@@ -123,7 +124,7 @@ localStorage
 
 ## Design
 
-Minimalista, tipografia confortável, contraste suave, foco no texto. Mobile-first: lista confortável, editor ocupa a tela, botões com área de toque adequada. Desktop: lista lateral + editor centralizado (máx. 740px).
+Minimalista, tipografia confortável e paleta quente amarelada/avermelhada para leitura prolongada (papel `#fdf6ec`, texto `#1f1a14`). Contraste suave, foco no texto, sombras suaves e cantos arredondados. Mobile-first: lista confortável, editor ocupa a tela, botões com área de toque adequada. Desktop: lista lateral + editor centralizado (máx. 740px). Paginação discreta, transições suaves.
 
 ## Limitações
 
