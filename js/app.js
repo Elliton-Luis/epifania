@@ -52,6 +52,8 @@
     cryptoBadge: $("#crypto-badge"),
     importFile: $("#import-file"),
     menuLock: $("#menu-lock"),
+    pagination: $("#pagination"),
+    pageInfo: $("#page-info"),
   };
 
   let notes = [];
@@ -62,6 +64,8 @@
   let pendingDeleteId = null;
   let unlockedPassword = null; // kept in memory only
   let mdMode = "write"; // write | preview
+  let currentPage = 1;
+  const PAGE_SIZE = 8;
 
   // -- helpers
   function nowISO() { return new Date().toISOString(); }
@@ -197,7 +201,7 @@
     const note={ id:Storage.generateId(), title:"", content:"", createdAt:nowISO(), updatedAt:nowISO() };
     notes.unshift(note);
     await persist();
-    activeId=note.id; searchQuery=""; els.search.value="";
+    activeId=note.id; searchQuery=""; els.search.value=""; currentPage=1;
     renderList(); openEditor(note.id);
     requestAnimationFrame(()=>els.titleInput.focus());
     showToast("nota criada");
@@ -237,16 +241,26 @@
   }
   function renderList(){
     const filtered=getFilteredNotes();
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageNotes = filtered.slice(start, start + PAGE_SIZE);
+
     els.notesCount.textContent=`${filtered.length} ${filtered.length===1?"nota":"notas"}${searchQuery?" • filtradas":""}`;
     els.btnSort.textContent= sortAsc ? "antigas ↓" : "recentes ↓";
     if(notes.length===0){
-      els.notesList.innerHTML=""; els.emptyList.classList.remove("hidden"); return;
+      els.notesList.innerHTML=""; els.emptyList.classList.remove("hidden");
+      els.pagination.classList.add("hidden"); els.pageInfo.classList.add("hidden");
+      return;
     }
     els.emptyList.classList.add("hidden");
     if(filtered.length===0){
-      els.notesList.innerHTML=`<div class="no-results">nenhuma nota para “${escapeHtml(searchQuery)}”</div>`; return;
+      els.notesList.innerHTML=`<div class="no-results">nenhuma nota para “${escapeHtml(searchQuery)}”</div>`;
+      els.pagination.classList.add("hidden"); els.pageInfo.classList.add("hidden");
+      return;
     }
-    els.notesList.innerHTML=filtered.map(note=>{
+    els.notesList.innerHTML=pageNotes.map(note=>{
       const isActive=note.id===activeId;
       const title=note.title.trim() || "sem título";
       const preview=note.content.trim().slice(0,120).replace(/\n/g," ") || "vazia…";
@@ -260,6 +274,42 @@
       const id=el.dataset.id;
       el.addEventListener("click",()=>openEditor(id));
       el.addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openEditor(id);} });
+    });
+    renderPagination(filtered.length, totalPages);
+  }
+
+  function renderPagination(total, totalPages){
+    if (total <= PAGE_SIZE) {
+      els.pagination.classList.add("hidden");
+      els.pageInfo.classList.add("hidden");
+      return;
+    }
+    els.pagination.classList.remove("hidden");
+    els.pageInfo.classList.remove("hidden");
+    els.pageInfo.textContent = `página ${currentPage} de ${totalPages} • ${total} notas`;
+
+    let html = "";
+    // prev
+    html += `<button class="page-btn" data-page="${currentPage-1}" ${currentPage===1?"disabled":""} aria-label="Anterior">‹</button>`;
+
+    // page numbers with ellipsis
+    const pages = [];
+    for (let i=1; i<=totalPages; i++) {
+      if (i===1 || i===totalPages || (i>=currentPage-1 && i<=currentPage+1)) pages.push(i);
+      else if (pages[pages.length-1] !== "…") pages.push("…");
+    }
+    pages.forEach(p=>{
+      if (p==="…") html += `<span class="page-ellipsis">…</span>`;
+      else html += `<button class="page-btn ${p===currentPage?"active":""}" data-page="${p}">${p}</button>`;
+    });
+
+    html += `<button class="page-btn" data-page="${currentPage+1}" ${currentPage===totalPages?"disabled":""} aria-label="Próxima">›</button>`;
+    els.pagination.innerHTML = html;
+    els.pagination.querySelectorAll(".page-btn[data-page]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const p = parseInt(btn.dataset.page,10);
+        if (!isNaN(p) && p>=1 && p<=totalPages) { currentPage = p; renderList(); window.scrollTo({top:0, behavior:"smooth"}); }
+      });
     });
   }
   function updateEditorMeta(note){
@@ -539,8 +589,8 @@
   });
 
   // search/sort
-  els.search.addEventListener("input",(e)=>{ searchQuery=e.target.value.trim(); renderList(); });
-  els.btnSort.addEventListener("click",()=>{ sortAsc=!sortAsc; renderList(); });
+  els.search.addEventListener("input",(e)=>{ searchQuery=e.target.value.trim(); currentPage=1; renderList(); });
+  els.btnSort.addEventListener("click",()=>{ sortAsc=!sortAsc; currentPage=1; renderList(); });
 
   // editor inputs
   els.titleInput.addEventListener("input",(e)=> debouncedUpdate({title:e.target.value}));
