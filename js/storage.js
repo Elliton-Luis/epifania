@@ -62,7 +62,9 @@ const Storage = (() => {
       meta: safeGet(ENC_META),
     };
     const stamp = payload.at.replace(/[:.]/g, "-");
-    const bkey = BACKUP_PREFIX + stamp;
+    // Chaves únicas mesmo com 2 backups no mesmo milissegundo (sufixo crescente).
+    let bkey = BACKUP_PREFIX + stamp;
+    for (let i = 1; safeGet(bkey) !== null; i++) bkey = BACKUP_PREFIX + stamp + "-" + i;
     safeSet(bkey, JSON.stringify(payload)); // throws em quota cheia — nada foi apagado
     pruneBackups();
     return bkey;

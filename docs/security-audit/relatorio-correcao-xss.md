@@ -58,6 +58,7 @@ js/storage.js
 - DATA_VERSION=1 + VERSION_KEY=epifania:data-version; createBackup/readBackup/
   restoreBackup (pre-restore antes de restaurar); listBackups/pruneBackups (retenção 5);
   migrateIfNeeded (backup → validar → migrar → validar → carimbar; falha preserva o anterior);
+  chaves de backup únicas mesmo no mesmo milissegundo (sufixo `-1`, `-2`…);
   exportJson passa a incluir {app:"epifania", dataVersion, exportedAt};
   migração legada cuspir preserva a chave antiga como redundância
 - motivo: proteção contra perda em atualizações/migrações; separação versão-app × versão-dados
