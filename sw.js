@@ -1,4 +1,7 @@
-const CACHE_NAME = "epifania-vintage-v3";
+// NOTA DE DADOS: este worker gerencia SOMENTE assets estáticos (cache-first).
+// Dados do usuário (localStorage: epifania:notes / epifania:enc:v1 / backups)
+// nunca são lidos, escritos ou apagados aqui — atualização do PWA não toca neles.
+const CACHE_NAME = "epifania-vintage-v4";
 const ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +9,7 @@ const ASSETS = [
   "./js/storage.js",
   "./js/app.js",
   "./js/markdown.js",
+  "./js/validate.js",
   "./js/crypto.js",
   "./manifest.json",
   "./assets/icons/icon.svg",

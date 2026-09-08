@@ -83,7 +83,7 @@
     return d.toLocaleDateString("pt-BR", { day:"2-digit", month:"short", year: d.getFullYear()!==new Date().getFullYear()?"numeric":undefined });
   }
   function formatFullDate(iso){ return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); }
-  function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function escapeHtml(s){ return EpifaniaValidate.escapeHtml(s); } // escape central (cobre & < > " ')
   function setSaveStatus(t,c=""){ els.saveStatus.textContent=t; els.saveStatus.className="save-status "+c; }
   function showToast(msg){
     els.toast.textContent=msg; els.toast.classList.remove("hidden");
@@ -127,6 +127,7 @@
   }
 
   async function initialLoad(){
+    try { Storage.migrateIfNeeded(); } catch {}
     if (isEncrypted()){
       els.lockScreen.classList.remove("hidden");
       document.getElementById("app").style.display="none";
@@ -249,32 +250,56 @@
 
     els.notesCount.textContent=`${filtered.length} ${filtered.length===1?"nota":"notas"}${searchQuery?" • filtradas":""}`;
     els.btnSort.textContent= sortAsc ? "antigas ↓" : "recentes ↓";
+    // Limpeza segura: remove nós (sem innerHTML="").
+    while (els.notesList.firstChild) els.notesList.removeChild(els.notesList.firstChild);
     if(notes.length===0){
-      els.notesList.innerHTML=""; els.emptyList.classList.remove("hidden");
+      els.emptyList.classList.remove("hidden");
       els.pagination.classList.add("hidden"); els.pageInfo.classList.add("hidden");
       return;
     }
     els.emptyList.classList.add("hidden");
     if(filtered.length===0){
-      els.notesList.innerHTML=`<div class="no-results">nenhuma nota para “${escapeHtml(searchQuery)}”</div>`;
+      // Construído via DOM: a query do usuário entra como texto, nunca como HTML.
+      const div=document.createElement("div");
+      div.className="no-results";
+      div.textContent=`nenhuma nota para “${searchQuery}”`;
+      els.notesList.appendChild(div);
       els.pagination.classList.add("hidden"); els.pageInfo.classList.add("hidden");
       return;
     }
-    els.notesList.innerHTML=pageNotes.map(note=>{
+    // Itens construídos via DOM API: id vai para dataset (não interpretado como HTML),
+    // título/prévia/data entram via textContent. Nenhum dado toca innerHTML aqui.
+    const frag=document.createDocumentFragment();
+    for (const note of pageNotes) {
       const isActive=note.id===activeId;
-      const title=note.title.trim() || "sem título";
-      const preview=note.content.trim().slice(0,120).replace(/\n/g," ") || "vazia…";
+      const title=(typeof note.title==="string" ? note.title : "").trim() || "sem título";
+      const preview=(typeof note.content==="string" ? note.content : "").trim().slice(0,120).replace(/\n/g," ") || "vazia…";
       const date=formatDate(note.updatedAt);
-      return `<article class="note-item ${isActive?"active":""}" data-id="${note.id}" tabindex="0" role="button" aria-label="Abrir nota ${escapeHtml(title)}">
-        <div class="note-item-top"><h2 class="note-item-title">${escapeHtml(title)}</h2><time class="note-item-date">${date}</time></div>
-        <p class="note-item-preview">${escapeHtml(preview)}</p>
-      </article>`;
-    }).join("");
-    els.notesList.querySelectorAll(".note-item").forEach(el=>{
-      const id=el.dataset.id;
-      el.addEventListener("click",()=>openEditor(id));
-      el.addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openEditor(id);} });
-    });
+      const id=String(note.id);
+      const article=document.createElement("article");
+      article.className="note-item"+(isActive?" active":"");
+      article.dataset.id=id;
+      article.tabIndex=0;
+      article.setAttribute("role","button");
+      article.setAttribute("aria-label",`Abrir nota ${title}`);
+      const top=document.createElement("div");
+      top.className="note-item-top";
+      const h2=document.createElement("h2");
+      h2.className="note-item-title";
+      h2.textContent=title;
+      const time=document.createElement("time");
+      time.className="note-item-date";
+      time.textContent=date;
+      top.appendChild(h2); top.appendChild(time);
+      const prev=document.createElement("p");
+      prev.className="note-item-preview";
+      prev.textContent=preview;
+      article.appendChild(top); article.appendChild(prev);
+      article.addEventListener("click",()=>openEditor(id));
+      article.addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openEditor(id);} });
+      frag.appendChild(article);
+    }
+    els.notesList.appendChild(frag);
     renderPagination(filtered.length, totalPages);
   }
 
@@ -424,24 +449,13 @@
       const text=e.target.result;
       try{
         if(file.name.endsWith(".json")){
-          const data=JSON.parse(text);
-          let importedNotes=null;
-          if(Array.isArray(data)) importedNotes=data;
-          else if(Array.isArray(data.notes)) importedNotes=data.notes;
-          else throw new Error("JSON inválido");
-          // validate notes shape
-          importedNotes = importedNotes.filter(n=> n && typeof n.title==="string" && typeof n.content==="string");
-          if(!importedNotes.length) throw new Error("nenhuma nota válida");
-          // merge: keep existing, prepend imported with new ids if conflict? keep ids but ensure uniqueness
-          const existingIds=new Set(notes.map(n=>n.id));
-          let added=0;
-          importedNotes.forEach(n=>{
-            if(!n.id || existingIds.has(n.id)) n.id=Storage.generateId();
-            if(!n.createdAt) n.createdAt=nowISO();
-            if(!n.updatedAt) n.updatedAt=nowISO();
-            notes.unshift(n); added++;
-          });
-          await persist(); renderList(); showToast(`${added} notas importadas`);
+          // Validação estrita: parse + estrutura + tipos + normalização.
+          // IDs externos NUNCA são preservados — cada nota importada recebe
+          // um id interno novo (conteúdo de fora, identidade do sistema).
+          const { notes: importedNotes, rejectedCount } = EpifaniaValidate.parseBackupFile(text, () => Storage.generateId());
+          for (let i = importedNotes.length - 1; i >= 0; i--) notes.unshift(importedNotes[i]);
+          await persist(); renderList();
+          showToast(rejectedCount ? `${importedNotes.length} notas importadas (${rejectedCount} rejeitadas)` : `${importedNotes.length} notas importadas`);
         } else if(file.name.endsWith(".md")){
           // treat whole file as one note
           const lines=text.split("\n");

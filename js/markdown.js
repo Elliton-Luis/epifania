@@ -155,3 +155,7 @@ const Markdown = (() => {
 
   return { toHtml, parseInline };
 })();
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = Markdown;
+}
