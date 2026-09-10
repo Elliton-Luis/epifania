@@ -54,6 +54,9 @@
     menuLock: $("#menu-lock"),
     pagination: $("#pagination"),
     pageInfo: $("#page-info"),
+    btnHelp: $("#btn-help"),
+    dialogHelp: $("#help-dialog"),
+    btnCloseHelp: $("#btn-close-help"),
   };
 
   let notes = [];
@@ -515,10 +518,11 @@
     if(!els.menuDropdown.classList.contains("hidden") && !els.menuDropdown.contains(e.target) && e.target!==els.btnMenu) els.menuDropdown.classList.add("hidden");
   });
   els.menuDropdown.addEventListener("click",(e)=>{
-    const action=e.target.dataset.action;
+    const action=e.target.closest && e.target.closest("[data-action]") ? e.target.closest("[data-action]").dataset.action : e.target.dataset.action;
     if(!action) return;
     els.menuDropdown.classList.add("hidden");
-    if(action==="export-json") exportAllJson();
+    if(action==="help") openHelp("about");
+    else if(action==="export-json") exportAllJson();
     else if(action==="import-json") els.importFile.click();
     else if(action==="clear-all") openClearDialog();
     else if(action==="crypto") { updateCryptoUI(); els.dialogCrypto.showModal(); }
@@ -652,7 +656,7 @@
   document.addEventListener("keydown",(e)=>{
     if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="n"){ e.preventDefault(); createNote(); }
     if(e.key==="Escape"){
-      if(els.dialogCrypto.open || els.dialogDelete.open || els.dialogClear.open) return;
+      if((els.dialogHelp && els.dialogHelp.open) || els.dialogCrypto.open || els.dialogDelete.open || els.dialogClear.open) return;
       if(!els.menuDropdown.classList.contains("hidden")){ els.menuDropdown.classList.add("hidden"); return;}
       if(document.body.classList.contains("editing") && window.innerWidth<860) closeEditor();
     }

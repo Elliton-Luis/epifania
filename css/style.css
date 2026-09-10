@@ -28,6 +28,28 @@
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
+/* Van Gogh Nocturne — modo escuro pastel, suave, não tecnológico */
+html[data-theme="dark"]{
+  --bg:#1e1d2b;
+  --bg-2:#26243a;
+  --paper:#252336;
+  --surface:#2d2b42;
+  --surface-2:#363452;
+  --surface-hover:#3f3d5e;
+  --border:#7a6e9e;
+  --border-strong:#b8add8;
+  --border-soft:#352f4a;
+  --text:#f5ecdb;
+  --text-2:#d4c7b3;
+  --text-3:#9e9382;
+  --accent:#e0b07a;
+  --accent-hover:#edc392;
+  --accent-fg:#231e12;
+  --accent-soft:#3d3322;
+  --accent-border:#7a5d3e;
+  --danger:#e09a8e;
+}
+
 *{box-sizing:border-box}
 html,body{height:100%}
 html{-webkit-text-size-adjust:100%}
@@ -418,6 +440,98 @@ body{
 .crypto-status.off{background:var(--surface-2); color:var(--text-3); border-style:dashed}
 .crypto-hint{margin-top:12px; font-size:11px; color:var(--text-3); border-top:1px solid var(--border-soft); padding-top:10px}
 .crypto-hint code{font-family:var(--mono); font-size:11px; background:var(--surface); padding:2px 6px; border-radius:6px; border:1px solid var(--border-soft)}
+
+/* theme toggle — switch simples */
+.theme-switch{
+  display:inline-flex; align-items:center; gap:8px;
+  cursor:pointer; user-select:none;
+  font-size:12px; font-weight:600; color:var(--text-2);
+  letter-spacing:0.04em; text-transform:lowercase;
+}
+.theme-switch input{position:absolute; opacity:0; width:0; height:0}
+.theme-switch-track{
+  width:44px; height:26px; border-radius:999px;
+  background: var(--surface); border:1px solid var(--border-soft);
+  position:relative; display:inline-block;
+  transition: background .2s, border-color .2s;
+  flex-shrink:0;
+}
+.theme-switch-thumb{
+  position:absolute; top:2px; left:2px;
+  width:20px; height:20px; border-radius:50%;
+  background: var(--accent); color: var(--accent-fg);
+  display:grid; place-items:center; font-size:11px; line-height:1;
+  transition: transform .22s cubic-bezier(.4,.2,.2,1), background .2s;
+  box-shadow:0 1px 4px rgba(0,0,0,0.12);
+}
+.theme-switch-thumb::before{content:"☾"}
+.theme-switch input:checked + .theme-switch-track{
+  background: var(--accent-soft); border-color: var(--border);
+}
+.theme-switch input:checked + .theme-switch-track .theme-switch-thumb{
+  transform: translateX(18px);
+  background: var(--accent);
+}
+.theme-switch input:checked + .theme-switch-track .theme-switch-thumb::before{content:"☀"}
+.theme-switch input:focus-visible + .theme-switch-track{
+  box-shadow:0 0 0 3px rgba(201,168,106,0.22);
+}
+
+
+
+/* dark overrides for hardcoded translucents */
+html[data-theme="dark"] .app-header{
+  background: rgba(37,35,54,0.92);
+  border-bottom-color: var(--border-soft);
+}
+html[data-theme="dark"] .editor-topbar{
+  background: rgba(37,35,54,0.70);
+  border-bottom-color: var(--border-soft);
+}
+html[data-theme="dark"] .search-input{
+  background: var(--surface);
+  border-color: var(--border-soft);
+  color: var(--text);
+}
+html[data-theme="dark"] .search-input:focus{
+  background: var(--surface-2);
+  border-color: var(--border);
+  box-shadow:0 0 0 3px rgba(122,110,158,0.22);
+}
+html[data-theme="dark"] .field-label input,
+html[data-theme="dark"] .lock-form input{
+  background: var(--surface);
+  border-color: var(--border-soft);
+  color: var(--text);
+}
+html[data-theme="dark"] .field-label input:focus,
+html[data-theme="dark"] .lock-form input:focus{
+  border-color: var(--border);
+  box-shadow:0 0 0 3px rgba(122,110,158,0.22);
+}
+html[data-theme="dark"] .md-preview code{
+  background: var(--surface-2);
+  border-color: var(--border-soft);
+}
+html[data-theme="dark"] .md-preview blockquote{
+  background: var(--surface-2);
+  border-left-color: var(--border);
+}
+html[data-theme="dark"] .md-preview pre{
+  background:#151326; border-color:#2a2642;
+}
+html[data-theme="dark"] .crypto-status.on{ border-color: var(--accent-border)}
+html[data-theme="dark"] .save-status{ background: var(--surface); border-color: var(--border-soft)}
+html[data-theme="dark"] .save-status.saved{ background: var(--accent-soft); color: var(--accent)}
+html[data-theme="dark"] .dialog::backdrop{ background: rgba(15,14,28,0.56)}
+html[data-theme="dark"] .note-item:hover{ background: var(--surface-2)}
+html[data-theme="dark"] .note-item.active{ background: var(--surface-2); box-shadow:0 0 0 3px rgba(224,176,122,0.14)}
+html[data-theme="dark"] .no-results{ background: rgba(45,43,66,0.6)}
+
+/* suavidade na troca de tema */
+body, .app-header, .sidebar, .editor-area, .note-item, .search-input, .dialog, .lock-card, .btn, .btn-ghost{
+  transition: background-color .22s, color .22s, border-color .22s;
+}
 
 /* scrollbar minimal */
 @media(min-width:860px){

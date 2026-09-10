@@ -9,7 +9,8 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="css/style.css?v=minimal1" />
+  <link rel="stylesheet" href="css/style.css?v=minimal2" />
+  <script>try{var t=localStorage.getItem("epifania:theme"); if(t==="dark"||(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark");}catch{}</script>
 </head>
 <body>
   <!-- Lock screen (shown when encrypted & locked) -->
@@ -38,6 +39,11 @@
         <span id="crypto-badge" class="crypto-badge hidden" title="criptografia ativa">🔒</span>
       </div>
       <div class="header-actions">
+        <label class="theme-switch" title="alternar tema claro/escuro">
+          <input type="checkbox" id="theme-toggle" aria-label="Alternar modo escuro" />
+          <span class="theme-switch-track"><span class="theme-switch-thumb"></span></span>
+        </label>
+        <button id="btn-help" class="btn btn-ghost btn-icon-only" aria-label="Ajuda" title="ajuda">?</button>
         <button id="btn-new" class="btn btn-primary" aria-label="Nova nota">
           <span class="btn-icon">＋</span>
           <span class="btn-label">nova</span>
@@ -45,6 +51,8 @@
         <div class="menu-wrap">
           <button id="btn-menu" class="btn btn-ghost btn-icon-only" aria-label="Menu">⋮</button>
           <div id="menu-dropdown" class="menu-dropdown hidden" role="menu">
+            <button class="menu-item" data-action="help">? ajuda</button>
+            <div class="menu-sep"></div>
             <button class="menu-item" data-action="export-json">↗ exportar JSON</button>
             <button class="menu-item" data-action="import-json">↘ importar JSON</button>
             <label class="menu-item" for="import-file" style="cursor:pointer">⤓ importar arquivo</label>
@@ -177,12 +185,15 @@
     </dialog>
 
     <input id="import-file" type="file" accept=".json,.md" class="hidden" />
+
+    
   </div>
 
   <script src="js/markdown.js"></script>
   <script src="js/crypto.js"></script>
   <script src="js/storage.js"></script>
   <script src="js/validate.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
