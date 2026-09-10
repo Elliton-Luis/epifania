@@ -509,6 +509,33 @@
   els.btnCancelClear.addEventListener("click",()=>els.dialogClear.close());
   els.btnConfirmClear.addEventListener("click",()=>{ els.dialogClear.close(); doClearAll(); });
 
+  // help
+  function openHelp(panel){
+    if (!els.dialogHelp) return;
+    const target = panel || "about";
+    els.dialogHelp.querySelectorAll(".help-tab").forEach(t=>{
+      const a = t.dataset.panel===target;
+      t.classList.toggle("active", a);
+      t.setAttribute("aria-selected", a ? "true" : "false");
+    });
+    els.dialogHelp.querySelectorAll(".help-panel").forEach(p=>{
+      p.classList.toggle("hidden", p.id !== `help-panel-${target}`);
+    });
+    if (typeof els.dialogHelp.showModal==="function") els.dialogHelp.showModal();
+  }
+  function closeHelp(){ if (els.dialogHelp && els.dialogHelp.open) els.dialogHelp.close(); }
+  if (els.btnHelp) els.btnHelp.addEventListener("click", ()=> openHelp("about"));
+  if (els.btnCloseHelp) els.btnCloseHelp.addEventListener("click", closeHelp);
+  if (els.dialogHelp) {
+    els.dialogHelp.querySelectorAll(".help-tab").forEach(tab=>{
+      tab.addEventListener("click", ()=> openHelp(tab.dataset.panel));
+    });
+    els.dialogHelp.addEventListener("click", (e)=>{
+      const rect = els.dialogHelp.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) closeHelp();
+    });
+  }
+
   // menu
   els.btnMenu.addEventListener("click",(e)=>{
     e.stopPropagation();

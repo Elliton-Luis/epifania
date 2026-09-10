@@ -186,7 +186,67 @@
 
     <input id="import-file" type="file" accept=".json,.md" class="hidden" />
 
-    
+    <dialog id="help-dialog" class="dialog help-dialog">
+      <h3 class="dialog-title">epifania — ajuda</h3>
+      <div class="help-tabs" role="tablist">
+        <button class="help-tab active" data-panel="about" role="tab" aria-selected="true">sobre</button>
+        <button class="help-tab" data-panel="markdown" role="tab" aria-selected="false">markdown</button>
+        <button class="help-tab" data-panel="tips" role="tab" aria-selected="false">dicas</button>
+      </div>
+      <div id="help-panel-about" class="help-panel">
+        <h4>o que é o epifania?</h4>
+        <p>um caderno digital minimalista para capturar epifanias sem fricção. inspirado em cadernos de bolso — <strong>abrir, anotar, seguir.</strong></p>
+        <p>não é notion, não é obsidian. é um lugar limpo para pensar: criação instantânea, autosave, busca, leitura em markdown, offline e instalável como PWA.</p>
+        <h4>como funciona</h4>
+        <p>suas notas vivem só no seu dispositivo (<code>localStorage</code>). sem conta, sem nuvem. com criptografia opcional AES-GCM 256, a senha nunca sai da memória.</p>
+        <p class="help-nasdaq">paleta Van Gogh pastel — creme quente de dia, índigo noturno suave à noite. troque pelo switch ☾/☀ no topo.</p>
+      </div>
+      <div id="help-panel-markdown" class="help-panel hidden">
+        <h4>markdown suportado</h4>
+        <p>escreva normalmente; a aba <strong>prévia</strong> renderiza na hora.</p>
+        <table>
+          <thead><tr><th>sintaxe</th><th>resultado</th></tr></thead>
+          <tbody>
+            <tr><td><code># título</code></td><td>título grande</td></tr>
+            <tr><td><code>## subtítulo</code>, <code>### seção</code></td><td>h2, h3 … até h6</td></tr>
+            <tr><td><code>**negrito**</code> ou <code>__negrito__</code></td><td><strong>negrito</strong></td></tr>
+            <tr><td><code>*itálico*</code> ou <code>_itálico_</code></td><td><em>itálico</em></td></tr>
+            <tr><td><code>~~riscado~~</code></td><td><del>riscado</del></td></tr>
+            <tr><td><code>`código`</code></td><td><code>código inline</code></td></tr>
+            <tr><td><code>```<br/>bloco```</code></td><td>bloco de código</td></tr>
+            <tr><td><code>- item</code> ou <code>* item</code></td><td>lista não ordenada</td></tr>
+            <tr><td><code>1. item</code></td><td>lista ordenada</td></tr>
+            <tr><td><code>[texto](https://...)</code></td><td>link</td></tr>
+            <tr><td><code>![alt](https://...)</code></td><td>link com rótulo (imagem como link)</td></tr>
+            <tr><td><code>&gt; citação</code></td><td>bloco citado</td></tr>
+            <tr><td><code>---</code> ou <code>***</code></td><td>linha horizontal</td></tr>
+          </tbody>
+        </table>
+        <pre># minha epifania
+**ideia forte** com *nuance*
+
+- ponto um
+- ponto dois
+
+&gt; citação que inspira
+
+`inline` e:
+
+```
+bloco de código
+```</pre>
+      </div>
+      <div id="help-panel-tips" class="help-panel hidden">
+        <h4>atalhos &amp; dicas</h4>
+        <p><code>Ctrl/⌘ + N</code> — nova nota · <code>Esc</code> — voltar/fechar dialogs</p>
+        <p>arraste <code>.json</code> ou <code>.md</code> sobre a janela para importar. exporte em <code>.md</code> ou <code>PDF</code> pelo editor ou rodapé da lista.</p>
+        <p>criptografia em <code>⋮ → criptografia</code>. se esquecer a senha, só apagando tudo — não há recuperação.</p>
+        <p>PWA: instale pelo ícone na barra de endereço. funciona offline; atualizações limpam só o cache de assets, nunca suas notas.</p>
+      </div>
+      <div class="dialog-actions">
+        <button id="btn-close-help" class="btn btn-primary">fechar</button>
+      </div>
+    </dialog>
   </div>
 
   <script src="js/markdown.js"></script>
