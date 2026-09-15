@@ -22,10 +22,16 @@
     btnBack: $("#btn-back"),
     btnDelete: $("#btn-delete"),
     btnSort: $("#btn-sort"),
-    btnExportMd: $("#btn-export-md"),
-    btnExportPdf: $("#btn-export-pdf"),
-    btnExportAllMd: $("#btn-export-all-md"),
-    btnExportAllPdf: $("#btn-export-all-pdf"),
+    btnExportOpen: $("#btn-export-open"),
+    btnExportOne: $("#btn-export-one"),
+    dialogExport: $("#export-dialog"),
+    btnCancelExport: $("#btn-cancel-export"),
+    btnConfirmExport: $("#btn-confirm-export"),
+    exportPicker: $("#export-picker"),
+    exportSearch: $("#export-search"),
+    exportList: $("#export-list"),
+    exportCountAll: $("#export-count-all"),
+    exportHint: $("#export-hint"),
     btnMenu: $("#btn-menu"),
     menuDropdown: $("#menu-dropdown"),
     toast: $("#toast"),
@@ -54,9 +60,10 @@
     menuLock: $("#menu-lock"),
     pagination: $("#pagination"),
     pageInfo: $("#page-info"),
-    btnHelp: $("#btn-help"),
     dialogHelp: $("#help-dialog"),
     btnCloseHelp: $("#btn-close-help"),
+    updateToast: $("#update-toast"),
+    btnUpdateApp: $("#btn-update-app"),
   };
 
   let notes = [];
@@ -385,63 +392,133 @@
     activeId=null; renderList();
   }
 
-  // -- exports
-  function exportSingleMd(){
-    const note=notes.find(n=>n.id===activeId); if(!note) return;
-    const md = `# ${note.title || "sem título"}\n\n${note.content}\n\n---\n_criada: ${formatFullDate(note.createdAt)}_\n_editada: ${formatFullDate(note.updatedAt)}_\n`;
-    downloadFile(`${slugify(note.title)}.md`, md, "text/markdown");
-    showToast("markdown exportado");
+  // -- exportação unificada (1 diálogo: quais notas + formato)
+  function noteToMd(n){
+    return `# ${n.title || "sem título"}\n\n${n.content}\n\n---\n_criada: ${formatFullDate(n.createdAt)}_\n_editada: ${formatFullDate(n.updatedAt)}_\n`;
   }
-  function exportSinglePdf(){
-    const note=notes.find(n=>n.id===activeId); if(!note) return;
-    const htmlContent = Markdown.toHtml(note.content);
-    const titleEsc = escapeHtml(note.title || "sem título");
+  function getExportScope(){
+    const el = document.querySelector('input[name="export-scope"]:checked');
+    return el ? el.value : "current";
+  }
+  function getExportFormat(){
+    const el = document.querySelector('input[name="export-format"]:checked');
+    return el ? el.value : "md";
+  }
+  function getExportSelection(){
+    const scope = getExportScope();
+    if (scope === "current") {
+      const n = notes.find((x) => x.id === activeId);
+      return n ? [n] : [];
+    }
+    if (scope === "all") return [...notes];
+    // selected: lê checkboxes
+    const checked = els.exportList
+      ? [...els.exportList.querySelectorAll('input[type="checkbox"]:checked')].map((c) => c.value)
+      : [];
+    return notes.filter((n) => checked.includes(n.id));
+  }
+  function updateExportHint(){
+    if (!els.exportHint) return;
+    const sel = getExportSelection();
+    const fmt = getExportFormat();
+    if (!sel.length) { els.exportHint.textContent = "selecione ao menos 1 nota."; return; }
+    const label = sel.length === 1 ? "1 nota" : `${sel.length} notas`;
+    els.exportHint.textContent = fmt === "pdf"
+      ? `${label} → PDF via impressão`
+      : fmt === "json"
+        ? `${label} → backup .json`
+        : `${label} → ${sel.length === 1 ? "1 arquivo .md" : "1 arquivo .md combinado"}`;
+  }
+  function renderExportPicker(filter=""){
+    if (!els.exportList) return;
+    while (els.exportList.firstChild) els.exportList.removeChild(els.exportList.firstChild);
+    const q = (filter || "").toLowerCase();
+    const frag = document.createDocumentFragment();
+    for (const n of notes) {
+      const title = (n.title || "").trim() || "sem título";
+      if (q && !(title.toLowerCase().includes(q) || (n.content || "").toLowerCase().includes(q))) continue;
+      const label = document.createElement("label");
+      label.className = "export-check";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = n.id;
+      cb.checked = true;
+      cb.addEventListener("change", updateExportHint);
+      const span = document.createElement("span");
+      span.textContent = `${title} · ${formatDate(n.updatedAt)}`;
+      label.appendChild(cb);
+      label.appendChild(span);
+      frag.appendChild(label);
+    }
+    els.exportList.appendChild(frag);
+    if (!els.exportList.firstChild) {
+      const p = document.createElement("p");
+      p.className = "export-empty";
+      p.textContent = "nada encontrado";
+      els.exportList.appendChild(p);
+    }
+  }
+  function openExportDialog(scope){
+    if (!notes.length) { showToast("nada para exportar"); return; }
+    if (els.exportCountAll) els.exportCountAll.textContent = String(notes.length);
+    const want = scope || (activeId ? "current" : "all");
+    const radio = document.querySelector(`input[name="export-scope"][value="${want}"]`);
+    if (radio) radio.checked = true;
+    else {
+      const all = document.querySelector('input[name="export-scope"][value="all"]');
+      if (all) all.checked = true;
+    }
+    // se pediu "current" mas não há nota ativa, cai para "all"
+    if (getExportScope() === "current" && !notes.find((n) => n.id === activeId)) {
+      const all = document.querySelector('input[name="export-scope"][value="all"]');
+      if (all) all.checked = true;
+    }
+    renderExportPicker(els.exportSearch ? els.exportSearch.value : "");
+    syncExportPickerVisibility();
+    updateExportHint();
+    if (els.dialogExport && typeof els.dialogExport.showModal === "function") els.dialogExport.showModal();
+  }
+  function syncExportPickerVisibility(){
+    if (!els.exportPicker) return;
+    els.exportPicker.classList.toggle("hidden", getExportScope() !== "selected");
+  }
+  function doUnifiedExport(){
+    const sel = getExportSelection();
+    if (!sel.length) { showToast("selecione ao menos 1 nota"); return; }
+    const fmt = getExportFormat();
+    const stamp = new Date().toISOString().slice(0, 10);
+    if (fmt === "json") {
+      downloadFile(`epifania-backup-${stamp}.json`, Storage.exportJson(sel), "application/json");
+      showToast(sel.length === 1 ? "nota exportada em .json" : `${sel.length} notas em .json`);
+    } else if (fmt === "md") {
+      if (sel.length === 1) {
+        downloadFile(`${slugify(sel[0].title)}.md`, noteToMd(sel[0]), "text/markdown");
+      } else {
+        downloadFile(`epifania-${stamp}.md`, sel.map(noteToMd).join("\n\n"), "text/markdown");
+      }
+      showToast(sel.length === 1 ? "markdown exportado" : `${sel.length} notas em .md`);
+    } else if (fmt === "pdf") {
+      printNotesPdf(sel);
+    }
+    if (els.dialogExport && els.dialogExport.open) els.dialogExport.close();
+  }
+  function printNotesPdf(list){
     const win = window.open("", "_blank");
-    if(!win){ showToast("popup bloqueado — permita popups"); return; }
-    win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${titleEsc}</title><style>
-      body{font-family: ui-sans-system,-apple-system,BlinkMacSystemFont,Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif; max-width:740px; margin:40px auto; padding:0 20px; color:#1c1917; line-height:1.6}
-      h1{font-size:28px; border-bottom:1px solid #e7e5e4; padding-bottom:12px}
-      pre{background:#0a0a0a;color:#fafaf9;padding:14px;border-radius:10px;overflow:auto}
-      code{font-family:ui-monospace,monospace; background:#f5f5f4; padding:2px 6px; border-radius:6px}
-      pre code{background:transparent; color:inherit}
-      blockquote{border-left:3px solid #d6d3d1; margin:12px 0; padding:6px 14px; background:#f5f5f4}
-      a{color:#0a0a0a}
-      .meta{font-size:12px;color:#a8a29e; margin-bottom:20px}
-      @media print{body{margin:20px}}
-    </style></head><body>
-      <h1>${titleEsc}</h1>
-      <div class="meta">criada ${formatFullDate(note.createdAt)} • editada ${formatFullDate(note.updatedAt)}</div>
-      <div>${htmlContent}</div>
-    </body></html>`);
-    win.document.close();
-    win.focus();
-    setTimeout(()=> win.print(), 400);
-  }
-  function exportAllJson(){
-    const json=Storage.exportJson(notes);
-    downloadFile(`epifania-backup-${new Date().toISOString().slice(0,10)}.json`, json, "application/json");
-    showToast("backup JSON exportado");
-  }
-  function exportAllMd(){
-    if(!notes.length){ showToast("nada para exportar"); return; }
-    const all = notes.map(n=> `# ${n.title || "sem título"}\n\n${n.content}\n\n---\n_criada: ${formatFullDate(n.createdAt)}_\n_editada: ${formatFullDate(n.updatedAt)}_\n`).join("\n\n");
-    downloadFile(`epifania-todas-${new Date().toISOString().slice(0,10)}.md`, all, "text/markdown");
-    showToast("todas as notas em .md");
-  }
-  function exportAllPdf(){
-    if(!notes.length){ showToast("nada para exportar"); return; }
-    const win=window.open("","_blank");
-    if(!win){ showToast("popup bloqueado"); return; }
-    let body = notes.map(n=>{
-      const title=escapeHtml(n.title||"sem título");
-      const md=Markdown.toHtml(n.content);
+    if (!win) { showToast("popup bloqueado — permita popups"); return; }
+    const single = list.length === 1;
+    const body = list.map((n) => {
+      const title = escapeHtml(n.title || "sem título");
+      const md = Markdown.toHtml(n.content);
       return `<article style="margin-bottom:40px; padding-bottom:30px; border-bottom:1px solid #e7e5e4"><h1>${title}</h1><div style="font-size:12px;color:#a8a29e;margin-bottom:12px">criada ${formatFullDate(n.createdAt)} • editada ${formatFullDate(n.updatedAt)}</div><div>${md}</div></article>`;
     }).join("");
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Epifania — todas as notas</title><style>
+    win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><title>${single ? escapeHtml(list[0].title || "nota") : "Epifania — notas"}</title><style>
       body{font-family:ui-sans-system,-apple-system,BlinkMacSystemFont,Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif; max-width:740px; margin:40px auto; padding:0 20px; color:#1c1917; line-height:1.6}
       h1{font-size:22px} pre{background:#0a0a0a;color:#fafaf9;padding:14px;border-radius:10px;overflow:auto} code{font-family:ui-monospace,monospace;background:#f5f5f4;padding:2px 6px;border-radius:6px} pre code{background:transparent;color:inherit} blockquote{border-left:3px solid #d6d3d1;margin:12px 0;padding:6px 14px;background:#f5f5f4}
-    </style></head><body><h1 style="text-align:center">epifania — todas as notas</h1><p style="text-align:center;color:#a8a29e;font-size:12px">${notes.length} notas • ${new Date().toLocaleDateString("pt-BR")}</p>${body}</body></html>`);
-    win.document.close(); win.focus(); setTimeout(()=>win.print(),500);
+      @media print{body{margin:20px}}
+    </style></head><body>${single ? "" : `<h1 style="text-align:center">epifania</h1><p style="text-align:center;color:#a8a29e;font-size:12px">${list.length} notas • ${new Date().toLocaleDateString("pt-BR")}</p>`}${body}</body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 500);
   }
 
   // -- import
@@ -524,7 +601,6 @@
     if (typeof els.dialogHelp.showModal==="function") els.dialogHelp.showModal();
   }
   function closeHelp(){ if (els.dialogHelp && els.dialogHelp.open) els.dialogHelp.close(); }
-  if (els.btnHelp) els.btnHelp.addEventListener("click", ()=> openHelp("about"));
   if (els.btnCloseHelp) els.btnCloseHelp.addEventListener("click", closeHelp);
   if (els.dialogHelp) {
     els.dialogHelp.querySelectorAll(".help-tab").forEach(tab=>{
@@ -549,8 +625,8 @@
     if(!action) return;
     els.menuDropdown.classList.add("hidden");
     if(action==="help") openHelp("about");
-    else if(action==="export-json") exportAllJson();
-    else if(action==="import-json") els.importFile.click();
+    else if(action==="export") openExportDialog();
+    else if(action==="import") els.importFile.click();
     else if(action==="clear-all") openClearDialog();
     else if(action==="crypto") { updateCryptoUI(); els.dialogCrypto.showModal(); }
     else if(action==="lock") lock();
@@ -650,11 +726,26 @@
   els.tabWrite.addEventListener("click",()=> setMdMode("write"));
   els.tabPreview.addEventListener("click",()=> setMdMode("preview"));
 
-  // exports
-  els.btnExportMd.addEventListener("click", exportSingleMd);
-  els.btnExportPdf.addEventListener("click", exportSinglePdf);
-  els.btnExportAllMd.addEventListener("click", exportAllMd);
-  els.btnExportAllPdf.addEventListener("click", exportAllPdf);
+  // exportação unificada
+  if (els.btnExportOpen) els.btnExportOpen.addEventListener("click", ()=> openExportDialog("all"));
+  if (els.btnExportOne) els.btnExportOne.addEventListener("click", ()=> openExportDialog("current"));
+  if (els.btnCancelExport) els.btnCancelExport.addEventListener("click", ()=> els.dialogExport.close());
+  if (els.btnConfirmExport) els.btnConfirmExport.addEventListener("click", doUnifiedExport);
+  document.querySelectorAll('input[name="export-scope"]').forEach((r)=>{
+    r.addEventListener("change", ()=>{ syncExportPickerVisibility(); updateExportHint(); });
+  });
+  document.querySelectorAll('input[name="export-format"]').forEach((r)=>{
+    r.addEventListener("change", updateExportHint);
+  });
+  if (els.exportSearch) els.exportSearch.addEventListener("input", (e)=>{
+    renderExportPicker(e.target.value); updateExportHint();
+  });
+  if (els.dialogExport) {
+    els.dialogExport.addEventListener("click", (e)=>{
+      const rect = els.dialogExport.getBoundingClientRect();
+      if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) els.dialogExport.close();
+    });
+  }
   els.importFile.addEventListener("change",(e)=>{
     const f=e.target.files[0]; if(f) handleImportFile(f);
     e.target.value="";
@@ -683,16 +774,60 @@
   document.addEventListener("keydown",(e)=>{
     if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="n"){ e.preventDefault(); createNote(); }
     if(e.key==="Escape"){
-      if((els.dialogHelp && els.dialogHelp.open) || els.dialogCrypto.open || els.dialogDelete.open || els.dialogClear.open) return;
+      if((els.dialogHelp && els.dialogHelp.open) || els.dialogCrypto.open || els.dialogDelete.open || els.dialogClear.open || (els.dialogExport && els.dialogExport.open)) return;
       if(!els.menuDropdown.classList.contains("hidden")){ els.menuDropdown.classList.add("hidden"); return;}
       if(document.body.classList.contains("editing") && window.innerWidth<860) closeEditor();
     }
   });
 
-  // PWA
-  if("serviceWorker" in navigator){
-    window.addEventListener("load",()=> navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+  // PWA — registra SW e avisa quando há versão nova
+  // Dispositivos com cache antigo recebem a nova versão via network-first (sw.js)
+  // + este listener mostra o banner "nova versão disponível".
+  let refreshing = false;
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").then((reg) => {
+        // checa atualização ao focar/periodicamente (pega versão nova mesmo com aba aberta)
+        const check = () => { try { reg.update(); } catch {} };
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) check(); });
+        setInterval(check, 60 * 60 * 1000);
+        if (reg.waiting) showUpdateToast();
+        reg.addEventListener("updatefound", () => {
+          const worker = reg.installing;
+          if (!worker) return;
+          worker.addEventListener("statechange", () => {
+            if (worker.state === "installed" && navigator.serviceWorker.controller) showUpdateToast();
+          });
+        });
+      }).catch(() => {});
+    });
+    navigator.serviceWorker.addEventListener("message", (e) => {
+      if (e.data && e.data.type === "SW_UPDATED" && navigator.serviceWorker.controller) showUpdateToast();
+    });
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
   }
+  function showUpdateToast(){
+    if (!els.updateToast) return;
+    els.updateToast.classList.remove("hidden");
+  }
+  if (els.btnUpdateApp) els.btnUpdateApp.addEventListener("click", async ()=>{
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg && reg.waiting) {
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        return;
+      }
+      if (reg && reg.installing) {
+        reg.installing.postMessage({ type: "SKIP_WAITING" });
+        return;
+      }
+    } catch {}
+    window.location.reload();
+  });
 
   // init
   initialLoad();

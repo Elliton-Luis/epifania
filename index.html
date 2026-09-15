@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="css/style.css?v=minimal2" />
+  <link rel="stylesheet" href="css/style.css?v=v6" />
   <script>try{var t=localStorage.getItem("epifania:theme"); if(t==="dark"||(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark");}catch{}</script>
 </head>
 <body>
@@ -43,7 +43,6 @@
           <input type="checkbox" id="theme-toggle" aria-label="Alternar modo escuro" />
           <span class="theme-switch-track"><span class="theme-switch-thumb"></span></span>
         </label>
-        <button id="btn-help" class="btn btn-ghost btn-icon-only" aria-label="Ajuda" title="ajuda">?</button>
         <button id="btn-new" class="btn btn-primary" aria-label="Nova nota">
           <span class="btn-icon">＋</span>
           <span class="btn-label">nova</span>
@@ -51,16 +50,14 @@
         <div class="menu-wrap">
           <button id="btn-menu" class="btn btn-ghost btn-icon-only" aria-label="Menu">⋮</button>
           <div id="menu-dropdown" class="menu-dropdown hidden" role="menu">
-            <button class="menu-item" data-action="help">? ajuda</button>
-            <div class="menu-sep"></div>
-            <button class="menu-item" data-action="export-json">↗ exportar JSON</button>
-            <button class="menu-item" data-action="import-json">↘ importar JSON</button>
-            <label class="menu-item" for="import-file" style="cursor:pointer">⤓ importar arquivo</label>
+            <button class="menu-item" data-action="export">↗ exportar…</button>
+            <button class="menu-item" data-action="import">↘ importar…</button>
             <div class="menu-sep"></div>
             <button class="menu-item" data-action="crypto">🔒 criptografia</button>
             <button class="menu-item menu-danger" data-action="clear-all">⌫ apagar tudo</button>
             <div class="menu-sep"></div>
             <button class="menu-item" data-action="lock" id="menu-lock">🔐 bloquear</button>
+            <button class="menu-item" data-action="help">? ajuda</button>
           </div>
         </div>
       </div>
@@ -88,8 +85,7 @@
         <div id="page-info" class="page-info hidden"></div>
 
         <div class="sidebar-footer">
-          <button class="btn-ghost" id="btn-export-all-md">exportar todas em .md</button>
-          <button class="btn-ghost" id="btn-export-all-pdf">exportar todas em PDF</button>
+          <button class="btn btn-ghost btn-block" id="btn-export-open">↗ exportar…</button>
         </div>
       </aside>
 
@@ -109,8 +105,7 @@
             <button id="btn-back" class="btn-ghost btn-back" aria-label="Voltar para lista">← voltar</button>
             <div class="editor-topbar-right">
               <span id="save-status" class="save-status">salvo</span>
-              <button id="btn-export-md" class="btn-ghost" title="Exportar em Markdown">.md</button>
-              <button id="btn-export-pdf" class="btn-ghost" title="Exportar em PDF">PDF</button>
+              <button id="btn-export-one" class="btn-ghost" title="Exportar nota">↗ exportar</button>
               <button id="btn-delete" class="btn-ghost btn-delete" aria-label="Excluir nota">excluir</button>
             </div>
           </div>
@@ -184,6 +179,35 @@
       </div>
     </dialog>
 
+    <dialog id="export-dialog" class="dialog dialog-large">
+      <h3 class="dialog-title">exportar</h3>
+      <p class="dialog-desc">escolha quais notas e em qual formato.</p>
+      <div class="stack">
+        <div class="export-group">
+          <p class="export-label">quais notas?</p>
+          <label class="export-option"><input type="radio" name="export-scope" value="current" checked /> <span>nota atual</span></label>
+          <label class="export-option"><input type="radio" name="export-scope" value="all" /> <span>todas (<span id="export-count-all">0</span>)</span></label>
+          <label class="export-option"><input type="radio" name="export-scope" value="selected" /> <span>escolher…</span></label>
+          <div id="export-picker" class="export-picker hidden">
+            <input id="export-search" class="search-input" type="search" placeholder="filtrar notas…" autocomplete="off" />
+            <div id="export-list" class="export-list"></div>
+          </div>
+        </div>
+        <div class="export-group">
+          <p class="export-label">formato</p>
+          <label class="export-option"><input type="radio" name="export-format" value="md" checked /> <span><strong>.md</strong> — markdown</span></label>
+          <label class="export-option"><input type="radio" name="export-format" value="pdf" /> <span><strong>PDF</strong> — via impressão</span></label>
+          <label class="export-option"><input type="radio" name="export-format" value="json" /> <span><strong>.json</strong> — backup completo</span></label>
+        </div>
+        <p id="export-hint" class="export-hint"></p>
+        <div class="dialog-actions">
+          <button type="button" id="btn-cancel-export" class="btn btn-ghost">cancelar</button>
+          <label class="btn btn-ghost" for="import-file" style="cursor:pointer" title="Importar .json ou .md">↘ importar</label>
+          <button type="button" id="btn-confirm-export" class="btn btn-primary">exportar</button>
+        </div>
+      </div>
+    </dialog>
+
     <input id="import-file" type="file" accept=".json,.md" class="hidden" />
 
     <dialog id="help-dialog" class="dialog help-dialog">
@@ -239,7 +263,7 @@ bloco de código
       <div id="help-panel-tips" class="help-panel hidden">
         <h4>atalhos &amp; dicas</h4>
         <p><code>Ctrl/⌘ + N</code> — nova nota · <code>Esc</code> — voltar/fechar dialogs</p>
-        <p>arraste <code>.json</code> ou <code>.md</code> sobre a janela para importar. exporte em <code>.md</code> ou <code>PDF</code> pelo editor ou rodapé da lista.</p>
+        <p>arraste <code>.json</code> ou <code>.md</code> sobre a janela para importar. use o botão <strong>exportar…</strong> (na lista ou no editor) para escolher as notas e o formato (<code>.md</code>, <code>PDF</code> ou <code>.json</code>).</p>
         <p>criptografia em <code>⋮ → criptografia</code>. se esquecer a senha, só apagando tudo — não há recuperação.</p>
         <p>PWA: instale pelo ícone na barra de endereço. funciona offline; atualizações limpam só o cache de assets, nunca suas notas.</p>
       </div>
@@ -249,11 +273,15 @@ bloco de código
     </dialog>
   </div>
 
-  <script src="js/markdown.js"></script>
-  <script src="js/crypto.js"></script>
-  <script src="js/storage.js"></script>
-  <script src="js/validate.js"></script>
-  <script src="js/theme.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/markdown.js?v=v6"></script>
+  <script src="js/crypto.js?v=v6"></script>
+  <script src="js/storage.js?v=v6"></script>
+  <script src="js/validate.js?v=v6"></script>
+  <script src="js/theme.js?v=v6"></script>
+  <script src="js/app.js?v=v6"></script>
+  <div id="update-toast" class="update-toast hidden" role="status">
+    <span>nova versão disponível</span>
+    <button id="btn-update-app" class="btn btn-primary btn-small">atualizar</button>
+  </div>
 </body>
 </html>

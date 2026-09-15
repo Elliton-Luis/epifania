@@ -98,6 +98,6 @@ describe("auditoria estática de sinks (app.js)", () => {
     const inner = [...code.matchAll(/\.innerHTML\s*=/g)];
     const dwrites = [...code.matchAll(/document\.write\(/g)];
     assert.equal(inner.length, 2, `innerHTML em código: ${inner.length} (esperado: paginação + preview markdown)`);
-    assert.equal(dwrites.length, 2, `document.write em código: ${dwrites.length} (esperado: 2 exports PDF)`);
+    assert.equal(dwrites.length, 1, `document.write em código: ${dwrites.length} (esperado: 1 export PDF unificado)`);
   });
 });
