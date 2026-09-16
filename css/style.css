@@ -225,6 +225,31 @@ body{
 .note-item-title{margin:0; font-size:14px; font-weight:650; line-height:1.3; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text)}
 .note-item-date{font-size:11px; color:var(--text-3); white-space:nowrap; font-variant-numeric: tabular-nums; font-weight:500}
 .note-item-preview{margin:6px 0 0; font-size:13px; color:var(--text-2); line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; opacity:0.9}
+.note-item-foot{display:flex; justify-content:flex-end; margin-top:8px}
+.note-copy-btn{
+  appearance:none; border:1px solid var(--border-soft);
+  background:transparent; color:var(--text-3);
+  font-size:11.5px; font-weight:600; letter-spacing:0.02em;
+  padding:5px 10px; border-radius:999px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:4px;
+  transition: background .15s, border-color .15s, color .15s;
+  text-transform:lowercase; min-height:32px;
+}
+.note-copy-btn:hover{background:var(--surface-2); color:var(--text); border-color:var(--border)}
+.note-copy-btn:active{transform:scale(0.97)}
+.note-copy-btn:disabled{opacity:0.6; cursor:wait}
+/* feedback de cópia — botão do editor e da lista */
+.btn-ghost.copy-ok, .note-copy-btn.copy-ok{
+  background:var(--accent-soft); color:var(--accent); border-color:var(--accent);
+  font-weight:700;
+}
+.btn-ghost.copy-fail, .note-copy-btn.copy-fail{
+  background:#fdf0f0; color:var(--danger); border-color:#e8b4b4;
+}
+html[data-theme="dark"] .btn-ghost.copy-fail,
+html[data-theme="dark"] .note-copy-btn.copy-fail{
+  background:rgba(224,154,142,0.12);
+}
 .no-results{padding:20px; text-align:center; color:var(--text-3); font-size:13px; border:1px dashed var(--border-soft); border-radius:12px; background:rgba(255,250,240,0.6)}
 .empty-state{padding:28px 16px; text-align:center; color:var(--text-3); background:var(--surface); border:1px solid var(--border-soft); border-radius:12px; margin-top:8px}
 .empty-state p{margin:4px 0}

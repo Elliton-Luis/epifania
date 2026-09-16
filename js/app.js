@@ -21,6 +21,7 @@
     btnNewEmpty: $("#btn-new-empty"),
     btnBack: $("#btn-back"),
     btnDelete: $("#btn-delete"),
+    btnCopy: $("#btn-copy"),
     btnSort: $("#btn-sort"),
     btnExportOpen: $("#btn-export-open"),
     btnExportOne: $("#btn-export-one"),
@@ -108,6 +109,138 @@
     const a = document.createElement("a");
     a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }
+
+  // -- copiar nota inteira (título + conteúdo) para o clipboard
+  // Funciona em PC + celular: tenta Clipboard API (moderno/seguro) e cai para
+  // fallback textarea + execCommand (HTTP, WebView, iOS antigo). Sempre indica
+  // o resultado e só diz "copiado" após confirmação real de sucesso.
+  function buildNoteText(title, content){
+    const t = (title || "").replace(/\s+$/,"");
+    const c = (content || "").replace(/\s+$/,"");
+    if (t && c) return `${t}\n\n${c}`;
+    return t || c || "";
+  }
+  function legacyCopy(text){
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.setAttribute("aria-hidden", "true");
+    ta.style.position = "fixed";
+    ta.style.top = "0";
+    ta.style.left = "0";
+    ta.style.width = "2px";
+    ta.style.height = "2px";
+    ta.style.padding = "0";
+    ta.style.border = "none";
+    ta.style.outline = "none";
+    ta.style.boxShadow = "none";
+    ta.style.background = "transparent";
+    ta.style.opacity = "0";
+    ta.style.fontSize = "16px"; // evita zoom no iOS
+    document.body.appendChild(ta);
+    // iOS exige elemento focável + seleção explícita dentro do gesto do usuário
+    ta.focus({ preventScroll: true });
+    ta.select();
+    try { ta.setSelectionRange(0, ta.value.length); } catch {}
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch { ok = false; }
+    if (!ok) {
+      // segunda chance: copia via Range/Selection (Safari antigo)
+      try {
+        const range = document.createRange();
+        range.selectNodeContents(ta);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        try { ta.setSelectionRange(0, ta.value.length); } catch {}
+        ok = document.execCommand("copy");
+        sel.removeAllRanges();
+      } catch { ok = false; }
+    }
+    ta.remove();
+    // execCommand retorna true somente se o SO aceitou a cópia
+    return ok === true;
+  }
+  async function copyTextRobust(text){
+    if (!text) return { ok: false, reason: "empty" };
+    // 1) Clipboard API moderna (PC + mobile em contexto seguro)
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+        await navigator.clipboard.writeText(text);
+        // verificação: tenta ler de volta; se leitura for bloqueada por
+        // permissão, mantém sucesso (o write já resolveu = SO aceitou).
+        try {
+          if (typeof navigator.clipboard.readText === "function") {
+            const back = await navigator.clipboard.readText();
+            if (back === text) return { ok: true, verified: true, method: "clipboard-api" };
+            // leu algo diferente: trata como falha para tentar fallback
+            throw new Error("verify-mismatch");
+          }
+        } catch (readErr) {
+          if (readErr && readErr.message === "verify-mismatch") throw readErr;
+          return { ok: true, verified: false, method: "clipboard-api" };
+        }
+        return { ok: true, verified: false, method: "clipboard-api" };
+      }
+    } catch {
+      // cai para o fallback legado
+    }
+    // 2) Fallback legado (HTTP, WebView, iOS antigo)
+    try {
+      const ok = legacyCopy(text);
+      if (ok) {
+        // melhor esforço: tenta confirmar lendo de volta quando permitido
+        try {
+          if (navigator.clipboard && typeof navigator.clipboard.readText === "function") {
+            const back = await navigator.clipboard.readText();
+            if (back === text) return { ok: true, verified: true, method: "execCommand-verified" };
+          }
+        } catch {}
+        return { ok: true, verified: false, method: "execCommand" };
+      }
+    } catch {}
+    return { ok: false, reason: "unsupported" };
+  }
+  function flashCopyButton(btn, ok){
+    if (!btn) return;
+    const original = btn.dataset.label || btn.textContent;
+    if (!btn.dataset.label) btn.dataset.label = original;
+    btn.classList.toggle("copy-ok", ok);
+    btn.classList.toggle("copy-fail", !ok);
+    btn.textContent = ok ? "✓ copiado!" : "✕ falhou";
+    clearTimeout(btn._copyT);
+    btn._copyT = setTimeout(()=>{
+      btn.textContent = btn.dataset.label;
+      btn.classList.remove("copy-ok", "copy-fail");
+    }, 1800);
+  }
+  async function copyNoteById(id, btn){
+    const note = notes.find((n)=>n.id===id);
+    if (!note) { showToast("nota não encontrada"); return; }
+    // se a nota ativa está no editor (pode ter digitação ainda no debounce),
+    // copia o que está na tela — mais fiel ao "tudo" que o usuário vê.
+    let title = note.title, content = note.content;
+    if (id === activeId && els.editor && !els.editor.classList.contains("hidden")) {
+      title = els.titleInput.value;
+      content = els.contentInput.value;
+    }
+    const text = buildNoteText(title, content);
+    if (!text) { showToast("nada para copiar — nota vazia"); if (btn) flashCopyButton(btn, false); return; }
+    if (btn) { btn.disabled = true; btn.textContent = "copiando…"; }
+    const res = await copyTextRobust(text);
+    if (btn) btn.disabled = false;
+    if (res.ok) {
+      flashCopyButton(btn, true);
+      showToast(res.verified ? "copiado ✓ (verificado)" : "copiado ✓");
+    } else {
+      flashCopyButton(btn, false);
+      showToast(res.reason === "empty" ? "nada para copiar — nota vazia" : "não foi possível copiar neste navegador");
+    }
+  }
+  function copyActiveNote(btn){
+    if (!activeId) { showToast("abra uma nota para copiar"); return; }
+    return copyNoteById(activeId, btn || els.btnCopy);
   }
 
   // -- crypto/persist
@@ -305,6 +438,23 @@
       prev.className="note-item-preview";
       prev.textContent=preview;
       article.appendChild(top); article.appendChild(prev);
+      const foot=document.createElement("div");
+      foot.className="note-item-foot";
+      const copyBtn=document.createElement("button");
+      copyBtn.type="button";
+      copyBtn.className="note-copy-btn";
+      copyBtn.textContent="⧉ copiar";
+      copyBtn.setAttribute("aria-label",`Copiar nota ${title} para a área de transferência`);
+      copyBtn.setAttribute("title","Copiar nota inteira (título + conteúdo)");
+      copyBtn.addEventListener("click",(ev)=>{
+        ev.stopPropagation();
+        copyNoteById(id, copyBtn);
+      });
+      copyBtn.addEventListener("keydown",(ev)=>{
+        if(ev.key==="Enter"||ev.key===" "){ ev.stopPropagation(); }
+      });
+      foot.appendChild(copyBtn);
+      article.appendChild(foot);
       article.addEventListener("click",()=>openEditor(id));
       article.addEventListener("keydown",(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openEditor(id);} });
       frag.appendChild(article);
@@ -557,6 +707,7 @@
   els.btnNew.addEventListener("click", createNote);
   els.btnNewEmpty.addEventListener("click", createNote);
   els.btnBack.addEventListener("click", closeEditor);
+  if (els.btnCopy) els.btnCopy.addEventListener("click", ()=> copyActiveNote(els.btnCopy));
   els.btnDelete.addEventListener("click", ()=>{
     if(!activeId) return; pendingDeleteId=activeId;
     if(typeof els.dialogDelete.showModal==="function") els.dialogDelete.showModal();
@@ -773,6 +924,7 @@
 
   document.addEventListener("keydown",(e)=>{
     if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==="n"){ e.preventDefault(); createNote(); }
+    if((e.ctrlKey||e.metaKey) && e.shiftKey && e.key.toLowerCase()==="c"){ e.preventDefault(); copyActiveNote(); }
     if(e.key==="Escape"){
       if((els.dialogHelp && els.dialogHelp.open) || els.dialogCrypto.open || els.dialogDelete.open || els.dialogClear.open || (els.dialogExport && els.dialogExport.open)) return;
       if(!els.menuDropdown.classList.contains("hidden")){ els.menuDropdown.classList.add("hidden"); return;}

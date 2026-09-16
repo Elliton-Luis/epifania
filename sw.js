@@ -10,7 +10,7 @@
 //   - navegações / index.html -> network-first (garante versão nova), fallback cache
 //   - demais assets -> stale-while-revalidate (responde rápido, atualiza em fundo)
 // - query strings (?v=...) são ignoradas no match para não duplicar cache
-const CACHE_NAME = "epifania-v6";
+const CACHE_NAME = "epifania-v7";
 const ASSETS = [
   "./",
   "./index.html",

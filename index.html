@@ -9,7 +9,7 @@
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="assets/icons/icon.svg" />
   <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
-  <link rel="stylesheet" href="css/style.css?v=v6" />
+  <link rel="stylesheet" href="css/style.css?v=v7" />
   <script>try{var t=localStorage.getItem("epifania:theme"); if(t==="dark"||(!t&&window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.setAttribute("data-theme","dark");}catch{}</script>
 </head>
 <body>
@@ -105,6 +105,7 @@
             <button id="btn-back" class="btn-ghost btn-back" aria-label="Voltar para lista">← voltar</button>
             <div class="editor-topbar-right">
               <span id="save-status" class="save-status">salvo</span>
+              <button id="btn-copy" class="btn-ghost" title="Copiar nota inteira (título + conteúdo)">⧉ copiar</button>
               <button id="btn-export-one" class="btn-ghost" title="Exportar nota">↗ exportar</button>
               <button id="btn-delete" class="btn-ghost btn-delete" aria-label="Excluir nota">excluir</button>
             </div>
@@ -262,7 +263,8 @@ bloco de código
       </div>
       <div id="help-panel-tips" class="help-panel hidden">
         <h4>atalhos &amp; dicas</h4>
-        <p><code>Ctrl/⌘ + N</code> — nova nota · <code>Esc</code> — voltar/fechar dialogs</p>
+        <p><code>Ctrl/⌘ + N</code> — nova nota · <code>Ctrl/⌘ + Shift + C</code> — copiar nota atual · <code>Esc</code> — voltar/fechar dialogs</p>
+        <p>cada nota tem um botão <strong>⧉ copiar</strong> (na lista e no topo do editor) que copia título + conteúdo. ao copiar, o botão vira <strong>✓ copiado!</strong> e o app mostra um aviso — a cópia só é confirmada após o navegador garantir que foi para a área de transferência.</p>
         <p>arraste <code>.json</code> ou <code>.md</code> sobre a janela para importar. use o botão <strong>exportar…</strong> (na lista ou no editor) para escolher as notas e o formato (<code>.md</code>, <code>PDF</code> ou <code>.json</code>).</p>
         <p>criptografia em <code>⋮ → criptografia</code>. se esquecer a senha, só apagando tudo — não há recuperação.</p>
         <p>PWA: instale pelo ícone na barra de endereço. funciona offline; atualizações limpam só o cache de assets, nunca suas notas.</p>
@@ -273,12 +275,12 @@ bloco de código
     </dialog>
   </div>
 
-  <script src="js/markdown.js?v=v6"></script>
-  <script src="js/crypto.js?v=v6"></script>
-  <script src="js/storage.js?v=v6"></script>
-  <script src="js/validate.js?v=v6"></script>
-  <script src="js/theme.js?v=v6"></script>
-  <script src="js/app.js?v=v6"></script>
+  <script src="js/markdown.js?v=v7"></script>
+  <script src="js/crypto.js?v=v7"></script>
+  <script src="js/storage.js?v=v7"></script>
+  <script src="js/validate.js?v=v7"></script>
+  <script src="js/theme.js?v=v7"></script>
+  <script src="js/app.js?v=v7"></script>
   <div id="update-toast" class="update-toast hidden" role="status">
     <span>nova versão disponível</span>
     <button id="btn-update-app" class="btn btn-primary btn-small">atualizar</button>
